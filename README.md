@@ -87,7 +87,7 @@ Request body: `{ "slurm_token": "<string>" }` (required).
 Responses: `200` `TeamOut` (no token) · `401` bad key.
 
 ```bash
-curl -X PUT http://127.0.0.1:27431/teams/alpha/token \
+curl -X PUT http://127.0.0.1:${API_PORT}/teams/alpha/token \
   -H "X-API-Key: $API_KEY" -H "Content-Type: application/json" \
   -d '{"slurm_token":"shared-team-token"}'
 ```
@@ -104,7 +104,7 @@ Responses: `200` `{ "detail": ... }` · `404` if the team has no token · `401`
 bad key.
 
 ```bash
-curl -X DELETE http://127.0.0.1:27431/teams/alpha \
+curl -X DELETE http://127.0.0.1:${API_PORT}/teams/alpha \
   -H "X-API-Key: $API_KEY"
 ```
 
@@ -131,7 +131,7 @@ Responses: `200` `{ "team_name": ..., "slurm_token": ... }` · `404` if the team
 has no token · `401` bad key.
 
 ```bash
-curl http://127.0.0.1:27431/teams/alpha/token -H "X-API-Key: $API_KEY"
+curl http://127.0.0.1:${API_PORT}/teams/alpha/token -H "X-API-Key: $API_KEY"
 ```
 
 ---
@@ -146,7 +146,7 @@ Responses: `200` `{ "keycloak_username": ..., "team_name": ..., "slurm_token": .
 lookups are disabled · `401` bad key.
 
 ```bash
-curl http://127.0.0.1:27431/users/alice@energy-guard.eu/token \
+curl http://127.0.0.1:${API_PORT}/users/alice@energy-guard.eu/token \
   -H "X-API-Key: $API_KEY"
 ```
 ```json
@@ -168,18 +168,19 @@ displays individual user tokens. It is published on **localhost only**, so reach
 it via SSH port-forwarding:
 
 ```bash
-ssh -L 27432:127.0.0.1:27432 <host>
-# then open http://localhost:27432
+ssh -L ${FRONTEND_PORT}:127.0.0.1:${FRONTEND_PORT} <host>
+# then open http://localhost:${FRONTEND_PORT}
 ```
 
 ## Networking / ports
 
 Both services join the external `nginxproxy_energyguard_net` network. Nothing is
-published to the public internet:
+published to the public internet. Ports and the in-network API URL are set in
+`.env` (`API_PORT`, `FRONTEND_PORT`, `API_BASE_URL`); see `.env.example`:
 
-- API:      `127.0.0.1:27431` → container `:27431` (also reachable in-network at
-  `http://keycloak-slurm-api:27431`)
-- Frontend: `127.0.0.1:27432` → container `:27432`
+- API:      `127.0.0.1:${API_PORT}` → container `:${API_PORT}` (also reachable
+  in-network at `${API_BASE_URL}`)
+- Frontend: `127.0.0.1:${FRONTEND_PORT}` → container `:${FRONTEND_PORT}`
 
 ## Running
 
