@@ -5,9 +5,6 @@ services:
     restart: unless-stopped
     env_file:
       - .env
-    # Published on localhost only (reach it through SSH port-forwarding, never
-    # the open internet). The slurm consumer on the same docker network can
-    # also reach it directly at http://keycloak-slurm-api:27431.
     ports:
       - "127.0.0.1:27431:27431"
     networks:
@@ -36,9 +33,6 @@ services:
 networks:
   nginxproxy_energyguard_net:
     external: true
-  # The EnergyGuard dashboard's project-default network, where its Postgres
-  # (`db`) lives. Confirm the exact name with `docker network ls` (compose
-  # derives it from the dashboard's project directory) and adjust if needed.
   dashboard_net:
     external: true
     name: energyguard-frontend_default

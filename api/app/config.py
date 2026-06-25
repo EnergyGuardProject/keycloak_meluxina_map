@@ -22,8 +22,8 @@ class Settings(BaseSettings):
 
     # --- EnergyGuard dashboard DB (READ-ONLY: source of truth for teams) ---
     # Reached over the dashboard's own compose network (see docker-compose.yml).
-    # Leave dashboard_db_enabled=false to fall back to the self-contained
-    # team_name stored on each row.
+    # When dashboard_db_enabled=false, GET /users/{username}/token returns 400;
+    # the team endpoints keep working.
     dashboard_db_enabled: bool = True
     dashboard_db_host: str = "db"
     dashboard_db_port: int = 5432

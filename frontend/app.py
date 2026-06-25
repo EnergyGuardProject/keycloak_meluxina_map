@@ -14,7 +14,7 @@ from flask import Flask, flash, redirect, render_template, request, url_for
 app = Flask(__name__)
 app.secret_key = os.environ.get("FRONTEND_SECRET", os.urandom(24).hex())
 
-API_BASE_URL = os.environ.get("API_BASE_URL", "http://keycloak-slurm-api:27431")
+API_BASE_URL = os.environ.get("API_BASE_URL")
 API_KEY = os.environ.get("API_KEY", "")
 
 
