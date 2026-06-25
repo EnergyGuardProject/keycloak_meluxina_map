@@ -1,8 +1,8 @@
 # Team ↔ Slurm token map
 
-A small service that maps **teams** to their **Slurm tokens** (encrypted at
-rest), and resolves an individual **Keycloak user** to a token by looking up the
-user's team live from the EnergyGuard dashboard. It consists of:
+A small service that maps teams to their Slurm tokens (encrypted at
+rest), and resolves an individual Keycloak user to a token by looking up the
+user's team live from the EnergyGuard dashboard's database. It consists of:
 
 - **`api/`** — a FastAPI service in front of the database (API-key protected).
 - **`frontend/`** — a very minimal Flask UI to set a team's token.
@@ -11,14 +11,12 @@ user's team live from the EnergyGuard dashboard. It consists of:
 
 ## Data store
 
-Data lives in a dedicated `keycloak_slurm_map` database on an existing
-shared `pgdb` Postgres container (reached at `pgdb:5432` over
-`nginxproxy_energyguard_net`). The database and its table are created
-automatically on first start — no other database on `pgdb` is touched.
+Data lives in a dedicated `keycloak_slurm_map` database on an
+shared `pgdb` Postgres container. The database and its table are created
+automatically on first start.
 
-We store **only the team → token mapping**. We do not store which users belong
-to a team — that is read live from the dashboard database, so there is nothing to keep in
-sync and the two databases can never drift apart.
+We store the team → token mapping in the database of this service. We do not store which users belong
+to a team, that is read from the dashboard database.
 
 Schema (`team_slurm_token`):
 
@@ -30,7 +28,7 @@ Schema (`team_slurm_token`):
 
 ### Resolving a user → team (source of truth = the dashboard)
 
-This service queries the dashboard DB read-only, as the dashboard `web` service does:
+This service queries the dashboard DB, by running the following:
 
 ```sql
 SELECT t.name FROM profile p
@@ -42,7 +40,7 @@ WHERE u.email = :username;
 `GET /users/{username}/token` uses this to find the user's current team, then
 returns that team's stored token.
 
-All dashboard access goes through a single read-only module, `app/teams.py`
+All dashboard access goes through `app/teams.py`
 (`get_user_team`). It is the only place that touches the dashboard DB, used
 by the one endpoint `GET /users/{username}/token`. Every other endpoint uses
 only our own `keycloak_slurm_map` DB.
@@ -52,13 +50,13 @@ Set `DASHBOARD_DB_ENABLED=false` to disable the lookup (then
 
 ## Encryption
 
-Slurm tokens are encrypted with a symmetric **Fernet** key (`ENCRYPTION_KEY`)
+Slurm tokens are encrypted with a symmetric Fernet key (`ENCRYPTION_KEY`)
 before being written, and only decrypted in memory when retrieved through the
 authenticated token endpoint.
 
 ## API
 
-Interactive docs are served at `/docs` (Swagger) and `/redoc`.
+Interactive docs are served at `/docs`.
 
 **Authentication.** Every endpoint except `GET /health` requires the header
 `X-API-Key: <API_KEY>`. A missing or wrong key returns `401`. The key is
@@ -174,12 +172,10 @@ ssh -L ${FRONTEND_PORT}:127.0.0.1:${FRONTEND_PORT} <host>
 
 ## Networking / ports
 
-Both services join the external `nginxproxy_energyguard_net` network. Nothing is
-published to the public internet. Ports and the in-network API URL are set in
+Both services join the external `nginxproxy_energyguard_net` network. Ports are set in
 `.env` (`API_PORT`, `FRONTEND_PORT`, `API_BASE_URL`); see `.env.example`:
 
-- API:      `127.0.0.1:${API_PORT}` → container `:${API_PORT}` (also reachable
-  in-network at `${API_BASE_URL}`)
+- API:      `127.0.0.1:${API_PORT}` → container `:${API_PORT}`
 - Frontend: `127.0.0.1:${FRONTEND_PORT}` → container `:${FRONTEND_PORT}`
 
 ## Running
