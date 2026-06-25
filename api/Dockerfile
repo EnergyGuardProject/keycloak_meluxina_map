@@ -10,6 +10,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app ./app
 
-EXPOSE 27431
+# Port can be overridden via the API_PORT env var (set in .env / compose).
+ENV API_PORT=27431
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "27431"]
+EXPOSE ${API_PORT}
+
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${API_PORT}"]

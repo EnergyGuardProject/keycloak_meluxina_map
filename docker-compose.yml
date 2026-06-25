@@ -6,7 +6,7 @@ services:
     env_file:
       - .env
     ports:
-      - "127.0.0.1:27431:27431"
+      - "127.0.0.1:${API_PORT}:${API_PORT}"
     networks:
       # Shared network: reaches the pgdb data store.
       - nginxproxy_energyguard_net
@@ -19,12 +19,13 @@ services:
     container_name: keycloak-slurm-frontend
     restart: unless-stopped
     environment:
-      API_BASE_URL: "http://keycloak-slurm-api:27431"
+      API_BASE_URL: "${API_BASE_URL}"
       API_KEY: "${API_KEY}"
       FRONTEND_SECRET: "${FRONTEND_SECRET:-change-me}"
+      FRONTEND_PORT: "${FRONTEND_PORT}"
     # Localhost only -> reach via port-forwarding.
     ports:
-      - "127.0.0.1:27432:27432"
+      - "127.0.0.1:${FRONTEND_PORT}:${FRONTEND_PORT}"
     depends_on:
       - api
     networks:

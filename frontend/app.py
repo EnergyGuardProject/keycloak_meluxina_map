@@ -54,4 +54,4 @@ def set_team_token():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=27432)
+    app.run(host="0.0.0.0", port=int(os.environ.get("FRONTEND_PORT", "27432")))
