@@ -17,6 +17,9 @@ class TeamSlurmToken(Base):
     team_name = Column(String(255), unique=True, nullable=False, index=True)
     # Fernet-encrypted slurm token. Never stored or logged in plaintext.
     encrypted_token = Column(String, nullable=False)
+    # MeluXina project name the team's jobs run under. Set by the admin
+    # alongside the token; nullable so pre-existing rows migrate cleanly.
+    meluxina_project_name = Column(String(255), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()

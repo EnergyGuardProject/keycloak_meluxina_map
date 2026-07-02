@@ -24,6 +24,7 @@ Schema (`team_slurm_token`):
 |-------------------|--------------------------------------------------|
 | `team_name`         | unique; matches the dashboard's `Team.name`    |
 | `encrypted_token`   | Fernet-encrypted slurm token |
+| `meluxina_project_name` | the MeluXina project the team's jobs run under |
 | `created_at` / `updated_at` | timestamps                             |
 
 ### Resolving a user → team (source of truth = the dashboard)
@@ -80,17 +81,18 @@ Summary:
 Creates the team's token if it does not exist, or updates it if it does
 (upsert). This is the only write endpoint and the one the frontend uses.
 
-Request body: `{ "slurm_token": "<string>" }` (required).
+Request body: `{ "slurm_token": "<string>", "meluxina_project_name": "<string>" }`
+(both required).
 
 Responses: `200` `TeamOut` (no token) · `401` bad key.
 
 ```bash
 curl -X PUT http://127.0.0.1:${API_PORT}/teams/alpha/token \
   -H "X-API-Key: $API_KEY" -H "Content-Type: application/json" \
-  -d '{"slurm_token":"shared-team-token"}'
+  -d '{"slurm_token":"shared-team-token","meluxina_project_name":"p200000"}'
 ```
 ```json
-{ "team_name":"alpha",
+{ "team_name":"alpha", "meluxina_project_name":"p200000",
   "created_at":"2026-06-18T12:00:00Z", "updated_at":"2026-06-18T12:00:00Z" }
 ```
 
@@ -115,7 +117,8 @@ Returns all teams that have a token, **without the tokens**. Useful for auditing
 Responses: `200` `[TeamOut, ...]` · `401` bad key.
 
 ```json
-[ { "team_name":"alpha", "created_at":"...", "updated_at":"..." } ]
+[ { "team_name":"alpha", "meluxina_project_name":"p200000",
+    "created_at":"...", "updated_at":"..." } ]
 ```
 
 ---
@@ -125,8 +128,8 @@ Responses: `200` `[TeamOut, ...]` · `401` bad key.
 Returns the decrypted token for a team. API-key protected; the frontend never
 calls it.
 
-Responses: `200` `{ "team_name": ..., "slurm_token": ... }` · `404` if the team
-has no token · `401` bad key.
+Responses: `200` `{ "team_name": ..., "meluxina_project_name": ..., "slurm_token": ... }`
+· `404` if the team has no token · `401` bad key.
 
 ```bash
 curl http://127.0.0.1:${API_PORT}/teams/alpha/token -H "X-API-Key: $API_KEY"
@@ -139,7 +142,7 @@ curl http://127.0.0.1:${API_PORT}/teams/alpha/token -H "X-API-Key: $API_KEY"
 Looks up the user's team **live from the dashboard**, then returns that team's
 decrypted token. This is the path the slurm consumer uses.
 
-Responses: `200` `{ "keycloak_username": ..., "team_name": ..., "slurm_token": ... }`
+Responses: `200` `{ "keycloak_username": ..., "team_name": ..., "meluxina_project_name": ..., "slurm_token": ... }`
 · `404` if the user is in no team, or that team has no token · `400` if dashboard
 lookups are disabled · `401` bad key.
 
@@ -149,7 +152,8 @@ curl http://127.0.0.1:${API_PORT}/users/alice@energy-guard.eu/token \
 ```
 ```json
 { "keycloak_username":"alice@energy-guard.eu",
-  "team_name":"alpha", "slurm_token":"shared-team-token" }
+  "team_name":"alpha", "meluxina_project_name":"p200000",
+  "slurm_token":"shared-team-token" }
 ```
 
 ---
@@ -160,7 +164,7 @@ No auth. Returns `{ "status": "ok" }`.
 
 ## Frontend
 
-A single-page form (team name + slurm token) that calls
+A single-page form (team name + slurm token + MeluXina project name) that calls
 `PUT /teams/{team}/token`. It holds the API key **server-side** and never
 displays individual user tokens. It is published on **localhost only**, so reach
 it via SSH port-forwarding:

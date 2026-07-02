@@ -67,10 +67,15 @@ def upsert_team_token(
     )
     encrypted = crypto.encrypt_token(payload.slurm_token)
     if row is None:
-        row = TeamSlurmToken(team_name=team_name, encrypted_token=encrypted)
+        row = TeamSlurmToken(
+            team_name=team_name,
+            encrypted_token=encrypted,
+            meluxina_project_name=payload.meluxina_project_name,
+        )
         db.add(row)
     else:
         row.encrypted_token = encrypted
+        row.meluxina_project_name = payload.meluxina_project_name
     db.commit()
     db.refresh(row)
     return row
@@ -121,6 +126,7 @@ def get_team_token(team_name: str, db: Session = Depends(get_db)) -> TeamTokenOu
         raise HTTPException(status_code=404, detail=f"Team '{team_name}' not found")
     return TeamTokenOut(
         team_name=team_name,
+        meluxina_project_name=row.meluxina_project_name,
         slurm_token=crypto.decrypt_token(row.encrypted_token),
     )
 
@@ -163,5 +169,6 @@ def get_user_token(
     return UserTokenOut(
         keycloak_username=keycloak_username,
         team_name=team_name,
+        meluxina_project_name=row.meluxina_project_name,
         slurm_token=crypto.decrypt_token(row.encrypted_token),
     )

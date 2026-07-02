@@ -27,15 +27,22 @@ def index():
 def set_team_token():
     team_name = (request.form.get("team_name") or "").strip()
     slurm_token = (request.form.get("slurm_token") or "").strip()
+    meluxina_project_name = (request.form.get("meluxina_project_name") or "").strip()
 
-    if not team_name or not slurm_token:
-        flash("Both team name and slurm token are required.", "error")
+    if not team_name or not slurm_token or not meluxina_project_name:
+        flash(
+            "Team name, slurm token and MeluXina project name are all required.",
+            "error",
+        )
         return redirect(url_for("index"))
 
     try:
         resp = requests.put(
             f"{API_BASE_URL}/teams/{team_name}/token",
-            json={"slurm_token": slurm_token},
+            json={
+                "slurm_token": slurm_token,
+                "meluxina_project_name": meluxina_project_name,
+            },
             headers={"X-API-Key": API_KEY},
             timeout=15,
         )

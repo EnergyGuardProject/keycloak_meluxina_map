@@ -9,7 +9,7 @@ import logging
 
 import psycopg2
 from psycopg2 import sql
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 from .config import get_settings
@@ -55,6 +55,15 @@ def init_db() -> None:
     from . import models  # noqa: F401
 
     Base.metadata.create_all(bind=engine)
+    # create_all() never alters existing tables, so add columns introduced
+    # after the table was first created. Idempotent.
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                "ALTER TABLE team_slurm_token "
+                "ADD COLUMN IF NOT EXISTS meluxina_project_name VARCHAR(255)"
+            )
+        )
 
 
 def get_db():
