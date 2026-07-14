@@ -71,11 +71,13 @@ def upsert_team_token(
             team_name=team_name,
             encrypted_token=encrypted,
             meluxina_project_name=payload.meluxina_project_name,
+            service_user=payload.service_user,
         )
         db.add(row)
     else:
         row.encrypted_token = encrypted
         row.meluxina_project_name = payload.meluxina_project_name
+        row.service_user = payload.service_user
     db.commit()
     db.refresh(row)
     return row
@@ -127,6 +129,7 @@ def get_team_token(team_name: str, db: Session = Depends(get_db)) -> TeamTokenOu
     return TeamTokenOut(
         team_name=team_name,
         meluxina_project_name=row.meluxina_project_name,
+        service_user=row.service_user,
         slurm_token=crypto.decrypt_token(row.encrypted_token),
     )
 
@@ -170,5 +173,6 @@ def get_user_token(
         keycloak_username=keycloak_username,
         team_name=team_name,
         meluxina_project_name=row.meluxina_project_name,
+        service_user=row.service_user,
         slurm_token=crypto.decrypt_token(row.encrypted_token),
     )

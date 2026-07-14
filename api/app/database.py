@@ -64,6 +64,12 @@ def init_db() -> None:
                 "ADD COLUMN IF NOT EXISTS meluxina_project_name VARCHAR(255)"
             )
         )
+        conn.execute(
+            text(
+                "ALTER TABLE team_slurm_token "
+                "ADD COLUMN IF NOT EXISTS service_user VARCHAR(255)"
+            )
+        )
 
 
 def get_db():
